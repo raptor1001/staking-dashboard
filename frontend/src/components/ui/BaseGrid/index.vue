@@ -12,7 +12,7 @@
       </div>
     </div>
 
-    <div class="table-wrap">
+    <div :class="{ 'table-wrap': true, scrollable: scrollable }">
       <div class="table-body">
         <div
           class="table-column"
@@ -23,8 +23,9 @@
           <div
             class="table-cell"
             v-for="(item, index) in data"
-            :key="index"
-            @click="() => onRowClick(item)"
+            :key="column.key ? column.key(item) : index"
+            @click="(e) => onRowClick(item)"
+            @contextmenu.prevent="() => onRowClick(item, true)"
             :style="column.align === 'right' ? { justifyContent: 'flex-end' } : { justifyContent: 'flex-start' }"
           >
             <template v-if="column.render">
@@ -57,7 +58,7 @@ export default {
   components: {
     SortHeaderCell
   },
-  props: ["data", "columns", "sort", "onRowClick"],
+  props: ["data", "columns", "sort", "onRowClick", 'scrollable'],
   methods: {
     orderBy(property) {
       if (this.sort.property === property) {
@@ -80,7 +81,9 @@ export default {
 }
 
 .table-headings-wrap {
-  @include table-row;
+  // @include table-row;
+  display: flex;
+  flex-direction: row;
   position: relative;
   min-height: 48px;
 }
@@ -92,8 +95,11 @@ export default {
   overflow: hidden;
   overflow-y: auto;
   height: 100%;
-  max-height: calc(100vh - 442px);
   border-bottom: 1px solid var(--light2);
+}
+
+.scrollable {
+  max-height: calc(100vh - 442px);
 }
 
 @media screen and (max-width: 414px) {
@@ -118,6 +124,7 @@ export default {
       cursor: pointer;
       border-bottom: 1px solid var(--light2);
       min-height: 48px;
+      max-height: 48px;
       overflow: hidden;
     }
     .table-cell:nth-child(odd) {

@@ -58,8 +58,9 @@ export default {
   font-weight: 500;
   color: var(--txt);
   display: inline-block;
-  overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .li-validator-image {

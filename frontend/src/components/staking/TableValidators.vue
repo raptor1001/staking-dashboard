@@ -53,7 +53,7 @@ export default {
   data: () => ({
     query: ``,
     sort: {
-      property: `total_stake`,
+      property: `apr`,
       order: `desc`
     },
     pagination: {
@@ -118,12 +118,13 @@ export default {
           title: `Status`,
           value: `status`,
           tooltip: tooltips.v_list.status,
-          width: "96px",
+          width: "110px",
           renderComponent: ValidatorStatus // render as Component - use custom Vue components
         },
         {
           title: `Name`,
           value: `name`,
+          key: item => item.address,
           tooltip: tooltips.v_list.name,
           renderComponent: ValidatorName // render as Component - use custom Vue components
         },
@@ -131,7 +132,7 @@ export default {
           title: `Expected Return`,
           value: `apr`,
           tooltip: tooltips.v_list.apr,
-          width: "160px",
+          width: "200px",
           align: "right",
           render: value => percent(value)
         },
@@ -155,16 +156,25 @@ export default {
           title: `Uptime`,
           value: `uptime_percentage`,
           tooltip: tooltips.v_list.uptime,
-          width: "96px",
+          width: "110px",
           align: "right",
           render: value => percent(value)
         }
       ]
 
+      const aprColumn = props.find(p => p.value === "apr")
+
+      if (this.$mq === "xlg") {
+        aprColumn.width = "200px"
+      } else {
+        aprColumn.width = "130px"
+      }
+
       if (this.$mq === "tab") {
         const keep = ["name", "apr", "total_stake"]
         props = props.filter(p => keep.includes(p.value))
       }
+
       if (this.$mq === "sm" || this.$mq === "md") {
         const keep = ["name", "apr"]
         props = props.filter(p => keep.includes(p.value))

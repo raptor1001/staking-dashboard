@@ -77,12 +77,13 @@ export default {
           title: `Status`,
           value: `status`,
           tooltip: tooltips.portfolio.status,
-          width: "96px",
+          width: "110px",
           renderComponent: ValidatorStatus // render as Component - use custom Vue components
         },
         {
           title: `Name`,
           value: `name`,
+          key: item => item.address,
           tooltip: tooltips.portfolio.name,
           renderComponent: ValidatorName // render as Component - use custom Vue components
         },
@@ -90,8 +91,8 @@ export default {
           title: `Stake`,
           value: `stake`,
           tooltip: `Stake of validator`,
-          width: "120px",
-            align: "right",
+          width: "150px",
+          align: "right",
           render: value => zeroDecimals(ones(value)) + " ONE"
         }
       ]
@@ -102,9 +103,15 @@ export default {
             title: `Returned in`,
             value: `remaining_epoch`,
             tooltip: tooltips.portfolio.ending_in,
-            width: "160px",
+            width: "190px",
             align: "right",
-            render: value => value + " epochs"
+            render: value => {
+              if (value) {
+                return `${value} epoch${value > 1 ? "s" : ""}`
+              } else {
+                return "end of current epoch"
+              }
+            }
           }
         ])
       } else {
@@ -156,7 +163,6 @@ export default {
 }
 </script>
 <style lang="scss">
-
 .table-delegations {
   .table-headings-wrap {
     width: 100%;

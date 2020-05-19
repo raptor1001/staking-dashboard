@@ -5,6 +5,7 @@
       :columns="columns"
       :data="enrichedValidators"
       :onRowClick="onClickValidator"
+      :scrollable="true"
     />
     <!-- <PanelPagination :pagination="pagination" :total="totalFound" /> -->
   </div>
@@ -59,7 +60,7 @@ export default {
         sort: { property, order },
       } = this
     ) {
-      
+
       //slice it just in case
       data = data.slice()
       if (property === 'name') {
@@ -93,6 +94,7 @@ export default {
         {
           title: `Name`,
           value: `name`,
+          key: item => item.address,
           tooltip: `The validator's moniker`,
           renderComponent: ValidatorName
         },
@@ -140,7 +142,11 @@ export default {
     this.$store.dispatch(`getMintingParameters`)
   },
   methods: {
-    onClickValidator(validator) {
+    onClickValidator(validator, newTab = false) {
+      if (newTab) {
+        window.open(window.location.origin + '/validators/' + validator.operator_address, '_blank')
+        return
+      }
       this.$router.push({
         name: "validator",
         params: { validator: validator.operator_address }

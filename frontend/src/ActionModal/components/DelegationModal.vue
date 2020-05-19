@@ -66,6 +66,7 @@
       field-label="Amount"
     > -->
     <TmFormGroup
+      v-if="isBalanceEnough"
       :error="$v.amount.$error && $v.amount.$invalid"
       class="action-modal-form-group"
       field-id="amount"
@@ -88,6 +89,19 @@
           @click.native="setMaxAmount()"
         />
       </TmFieldGroup>
+
+      <div class="slider">
+        <div class="value">{{ sliderValueOutput }}%</div>
+        <input
+          v-model="sliderValue"
+          type="range"
+          min="0"
+          max="100"
+          step="10"
+          @input="change"
+        />
+      </div>
+
       <span v-if="!isRedelegation()" class="form-message">
         Available to Stake:
         {{ getFromBalance() }}
@@ -119,12 +133,24 @@
         name="Amount"
         type="required"
       />
+      <!--      <TmFormMsg-->
+      <!--        v-else-if="$v.amount.$error && !$v.amount.between"-->
+      <!--        :max="$v.amount.$params.between.max"-->
+      <!--        :min="$v.amount.$params.between.min"-->
+      <!--        name="Amount"-->
+      <!--        type="between"-->
+      <!--      />-->
       <TmFormMsg
-        v-else-if="$v.amount.$error && !$v.amount.between"
-        :max="$v.amount.$params.between.max"
-        :min="$v.amount.$params.between.min"
+        v-else-if="$v.amount.$error && !$v.amount.minValue"
+        :min="$v.amount.$params.minValue.min"
         name="Amount"
-        type="between"
+        type="minValue"
+      />
+      <TmFormMsg
+        v-else-if="$v.amount.$error && !$v.amount.maxValue"
+        :max="$v.amount.$params.maxValue.max"
+        name="Amount"
+        type="maxValue"
       />
       <TmFormMsg
         v-else-if="isMaxAmount() && !isRedelegation()"
@@ -133,12 +159,20 @@
         class="tm-form-msg"
       />
     </TmFormGroup>
+
+    <div v-else class="body_container">
+      <TmFormMsg
+        name=""
+        type="custom"
+        :msg="`Not enough funds to delegate, minimum ${minAmountOnes} ONEs`"
+      />
+    </div>
   </ActionModal>
 </template>
 
 <script>
 import { mapState, mapGetters } from "vuex"
-import { between, decimal } from "vuelidate/lib/validators"
+import { decimal, minValue, maxValue } from "vuelidate/lib/validators"
 import {
   uatoms,
   atoms,
@@ -194,7 +228,10 @@ export default {
   },
   data: () => ({
     amount: null,
-    selectedIndex: 0
+    selectedIndex: 0,
+    slideValue: 50,
+    slideValueOutput: 50,
+    sliderValueOutput: 50
   }),
   computed: {
     ...mapState([`session`]),
@@ -208,6 +245,12 @@ export default {
       if (!this.session.signedIn) return ``
 
       return this.fromOptions[this.selectedIndex].address
+    },
+    isBalanceEnough() {
+      return atoms(this.balance) > ones(this.minAmount)
+    },
+    minAmountOnes() {
+      return ones(this.minAmount)
     },
     transactionData() {
       if (!this.from) return {}
@@ -266,6 +309,10 @@ export default {
     }
   },
   methods: {
+    change() {
+      this.sliderValueOutput = this.sliderValue
+      this.amount = atoms((this.balance * this.sliderValue) / 100)
+    },
     viewDenom,
     open(options) {
       if (options && options.redelegation && this.fromOptions.length > 1) {
@@ -308,12 +355,84 @@ export default {
       amount: {
         required: x => !!x && x !== `0`,
         decimal,
-        between: between(
-          Math.max(SMALLEST, this.minAmount),
+        minValue: minValue(Math.max(SMALLEST, ones(this.minAmount))),
+        maxValue: maxValue(
           Math.min(atoms(this.balance), ones(this.validator.remainder))
         )
+
+        // between: between(
+        //   Math.max(SMALLEST, this.minAmount),
+        //   Math.min(atoms(this.balance), ones(this.validator.remainder))
+        // )
       }
     }
   }
 }
 </script>
+<style scoped="true" lang="scss">
+.body_container {
+  margin: 20px 0px 40px 0px;
+}
+
+.slider {
+  margin: var(--unit);
+
+  .value {
+    text-align: center;
+  }
+
+  input[type="range"] {
+    padding: 0;
+    border: none;
+    -webkit-appearance: none;
+    margin: 0;
+    width: 100%;
+  }
+  input[type="range"]:focus {
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 8px;
+    cursor: pointer;
+    background: #ddd;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    border: 2px solid var(--blue);
+    height: 32px;
+    width: 32px;
+    border-radius: 16px;
+    background: #ffffff;
+    cursor: pointer;
+    margin-top: -12px;
+  }
+  input[type="range"]:focus::-webkit-slider-runnable-track {
+    background: #eee;
+    border: none;
+    outline: none;
+  }
+  input[type="range"]::-moz-range-track {
+    width: 100%;
+    height: 8px;
+    cursor: pointer;
+    background: #ddd;
+  }
+  input[type="range"]::-moz-range-thumb {
+    -webkit-appearance: none;
+    border: 2px solid var(--blue);
+    height: 32px;
+    width: 32px;
+    border-radius: 16px;
+    background: #ffffff;
+    cursor: pointer;
+    margin-top: -12px;
+  }
+  input[type="range"]::-ms-track {
+    width: 100%;
+    height: 8px;
+    cursor: pointer;
+    background: #ddd;
+  }
+}
+</style>
